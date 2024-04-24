@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.*;
 
@@ -117,7 +118,7 @@ public class DetailProductController {
     }
 
     @GetMapping("/shop/addProductCart")
-    public String handleAddToCart(@RequestParam("idDetailProduct") UUID idDProduct, @RequestParam("quantity") int quantity, Model model) {
+    public String handleAddToCart(@RequestParam("idDetailProduct") UUID idDProduct, @RequestParam("quantity") int quantity, Model model, RedirectAttributes redirectAttribute) {
 
         ChiTietGiay ctg = giayChiTietService.getByIdChiTietGiay(idDProduct);
 
@@ -126,7 +127,9 @@ public class DetailProductController {
         GioHangChiTiet gioHangChiTiet = ghctService.findByCTSPActive(ctg);
 
         if (gioHangChiTiet != null){
+            int soLuongMoi = gioHangChiTiet.getSoLuong() + quantity;
             gioHangChiTiet.setSoLuong(gioHangChiTiet.getSoLuong() + quantity);
+            gioHangChiTiet.setSoLuong(soLuongMoi);
             gioHangChiTiet.setTgThem(new Date());
             gioHangChiTiet.setDonGia(quantity*ctg.getGiaBan());
             gioHangChiTiet.setDonGiaTruocKhiGiam(quantity*ctg.getSoTienTruocKhiGiam());
@@ -144,6 +147,7 @@ public class DetailProductController {
             gioHangChiTietNew.setTrangThai(1);
 
             ghctService.addNewGHCT(gioHangChiTietNew);
+            redirectAttribute.addFlashAttribute("successMessage", "Sản phẩm đã được thêm vào giỏ hàng thành công!");
         }
 
         String idGiay = String.valueOf(ctg.getGiay().getIdGiay());
