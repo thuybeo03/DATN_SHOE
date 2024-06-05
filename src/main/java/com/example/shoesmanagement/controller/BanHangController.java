@@ -14,16 +14,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-
 import java.util.*;
-
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-
-import java.util.UUID;
-
 
 @Controller
 @RequestMapping("/ban-hang")
@@ -71,10 +65,15 @@ public class BanHangController {
     private KhuyenMaiRepository khuyenMaiRepository;
 
     private double tongTien = 0;
+
     private double tienKhuyenMai = 0;
+
     private double tongTienSauKM = tongTien - tienKhuyenMai;
+
     private UUID idHoaDon = null;
+
     private int tongSanPham = 0;
+
     private double dieuKienKhuyenMai = 0;
 
     private double giaTienGiam = 0;
@@ -83,10 +82,15 @@ public class BanHangController {
     public String hienThi(Model model
             , @ModelAttribute("messageSuccess") String messageSuccess
             , @ModelAttribute("messageError") String messageError) {
+
+
+
+
         List<GiayViewModel> list = giayViewModelService.getAllVm();
 
         NhanVien nhanVien = (NhanVien) httpSession.getAttribute("staffLogged");
-        model.addAttribute("listSanPham", list);
+        List<GiayViewModel> listG = giayViewModelService.getAllVm();
+        model.addAttribute("listSanPham", listG);
 
         List<KhuyenMai> khuyenMai = khuyenMaiService.getAllKhuyenMai();
         model.addAttribute("khuyenMai", khuyenMai);
@@ -94,9 +98,7 @@ public class BanHangController {
         model.addAttribute("listHoaDon", hoaDonService.getListHoaDonChuaThanhToan());
         model.addAttribute("tongTien", 0);
         model.addAttribute("tongSanPham", 0);
-        model.addAttribute("khuyenMai", 0);
         model.addAttribute("khachHang", null);
-        model.addAttribute("tongTienSauKM", 0);
         model.addAttribute("listKhachHang", khachHangService.findKhachHangByTrangThai());
         if (!"true".equals(messageSuccess)) {
             model.addAttribute("messageSuccess", false);
@@ -117,10 +119,10 @@ public class BanHangController {
         List<GiayViewModel> listG = giayViewModelService.getAllVm();
         model.addAttribute("listSanPham", listG);
         List<HoaDon> listHD = hoaDonService.getListHoaDonChuaThanhToan();
-
         List<KhuyenMai> khuyenMai = khuyenMaiService.getAllKhuyenMai();
         model.addAttribute("khuyenMai", khuyenMai);
         if (listHD.size() < 6) {
+
             HoaDon hd = new HoaDon();
             Date date = new Date();
             hd.setMaHD("HD" + date.getDate() + generateRandomNumbers());
@@ -271,7 +273,7 @@ public class BanHangController {
             redirectAttributes.addFlashAttribute("messageError", true);
             redirectAttributes.addFlashAttribute("tbaoError", "Bạn chưa chọn hóa đơn");
             model.addAttribute("listHoaDon", hoaDonService.getListHoaDonChuaThanhToan());
-            return "redirect:/ban-hang/";
+            return "redirect:/ban-hang/hien-thi";
         }
         ChiTietGiay chiTietGiay = giayChiTietService.getByIdChiTietGiay(idChiTietGiay);
         if (soLuong > chiTietGiay.getSoLuong()) {
@@ -299,14 +301,6 @@ public class BanHangController {
             httpSession.setAttribute("tongSP", tongSanPham);
             hoaDonChiTietService.add(hdct);
         }
-//        List<HoaDonChiTiet> findByIdHoaDon= hoaDonChiTietService.findByIdHoaDon(idHoaDon);
-//        model.addAttribute("gioHang",findByIdHoaDon);
-//        model.addAttribute("listHoaDon", hoaDonService.getListHoaDonChuaThanhToan());
-
-        // tong tien
-//        tongTien = hoaDonChiTietService.tongTien(findByIdHoaDon);
-//        model.addAttribute("tongTien", this.tongTien);
-        // cập nhật sl ctg
         if (soLuong == chiTietGiay.getSoLuong()){
             chiTietGiay.setTrangThai(0);
         }
