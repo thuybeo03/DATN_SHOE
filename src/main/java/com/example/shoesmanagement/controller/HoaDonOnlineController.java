@@ -100,10 +100,6 @@ public class HoaDonOnlineController {
                     if(x.getTrangThai() == 4){
                         soLuongHoaDonHuy ++;
                     }
-                    if (x.getHinhThucThanhToan() == 1 ){
-                        soLuongHoaDonBanking ++;
-                        listHoaDonOnlineQRCode.add(x);
-                    }
                     if (x.getHinhThucThanhToan() == 0){
                         soLuongHoaDonThanhToanKhiNhanHang ++;
                     }
