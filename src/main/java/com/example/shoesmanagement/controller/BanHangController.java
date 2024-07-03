@@ -65,13 +65,15 @@ public class BanHangController {
     @Autowired
     private KhuyenMaiRepository khuyenMaiRepository;
 
+    private double tongTienSanPham = 0;
+
+//    private double tienKhuyenMai = 0;
 
     private double tongTien = 0;
 
     @Autowired
     HoaDonRepository hoaDonRepository;
 
-    private double tongTienSanPham = 0;
     private int tongSanPham = 0;
 
     private double giaBan= 0;
@@ -90,7 +92,10 @@ public class BanHangController {
 
     private double dieuKienKhuyenMai = 0;
 
+
     private double giaTienGiam = 0;
+
+
 
     @GetMapping("/hien-thi")
     public String hienThi(Model model
@@ -103,7 +108,6 @@ public class BanHangController {
         model.addAttribute("listSanPham", listG);
         List<KhuyenMai> khuyenMai = khuyenMaiService.getAllKhuyenMai();
         model.addAttribute("khuyenMai", khuyenMai);
-
         model.addAttribute("listHoaDon", hoaDonService.getListHoaDonChuaThanhToan());
         model.addAttribute("tongTienSanPham", 0);
         model.addAttribute("tongTien", 0);
@@ -474,11 +478,13 @@ public class BanHangController {
         this.tongTien = (double) httpSession.getAttribute("tongTien");
         this.tongTienSanPham = (double) httpSession.getAttribute("tongTienSanPham");
         HoaDon hoaDon = hoaDonService.getOne(idHoaDon);
+
         if(listG.isEmpty()){
             redirectAttributes.addFlashAttribute("messageError", true);
             redirectAttributes.addFlashAttribute("tbaoError", "Không có sản phẩm");
             return "redirect:/ban-hang/cart/hoadon/" + this.idHoaDon;
         }
+
         hoaDon.setTrangThai(1);
         hoaDon.setTgThanhToan(new Date());
 
@@ -489,6 +495,7 @@ public class BanHangController {
         hoaDon.setHinhThucThanhToan(0);
 
         hoaDonService.add(hoaDon);
+
 
         KhuyenMai khuyenMai = hoaDon.getKhuyenMai();
         khuyenMai.setSoLuong(khuyenMai.getSoLuong() - hoaDon.getTongSP());
@@ -531,13 +538,17 @@ public class BanHangController {
     }
 
     @GetMapping("/chon-khuyen-mai/{idKM}")
-
     public String chonKM(Model model, @PathVariable("idKM") UUID idKM, RedirectAttributes redirectAttributes){
         KhuyenMai khuyenMai = khuyenMaiRepository.findById(idKM).orElse(null);
         giaTienGiam = khuyenMai.getGiaTienGiam();
 
         UUID idHoaDon = (UUID) httpSession.getAttribute("idHoaDon");
         HoaDon hoaDon = hoaDonService.getOne(idHoaDon);
+        hoaDon.setKhuyenMai(khuyenMai);
+        hoaDonService.add(hoaDon);
+        httpSession.setAttribute("khuyenMai", khuyenMai);
+        redirectAttributes.addFlashAttribute("messageSuccess", true);
+//        redirectAttributes.addFlashAttribute("tb", "Thêm khách hàng thành công");
 //        httpSession.removeAttribute("idHoaDon");
         hoaDon.setKhuyenMai(khuyenMai);
         httpSession.setAttribute("khuyenMai", khuyenMai);

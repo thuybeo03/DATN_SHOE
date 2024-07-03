@@ -5,7 +5,7 @@ import com.example.shoesmanagement.model.GioHangChiTiet;
 import com.example.shoesmanagement.model.KhachHang;
 import com.example.shoesmanagement.service.CTGViewModelService;
 import com.example.shoesmanagement.service.GHCTService;
-import com.example.shoesmanagement.service.GiayChiTietService;
+
 import com.example.shoesmanagement.viewModel.CTGViewModel;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;

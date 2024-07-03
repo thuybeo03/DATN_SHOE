@@ -44,7 +44,7 @@ public class HoaDonOnlineController {
         model.addAttribute("reLoadPage", true);
         if (session.getAttribute("managerLogged") == null) {
             // Nếu managerLogged bằng null, quay về trang login
-return "redirect:/login";
+            return "redirect:/login";
         }
         showData(model);
         showTab1(model);
@@ -99,9 +99,6 @@ return "redirect:/login";
                 }else{
                     if(x.getTrangThai() == 4){
                         soLuongHoaDonHuy ++;
-                    }
-                    if (x.getHinhThucThanhToan() == 0){
-                        soLuongHoaDonThanhToanKhiNhanHang ++;
                     }
                     if (x.getHinhThucThanhToan() != null) {
                         if (x.getHinhThucThanhToan() == 1) {

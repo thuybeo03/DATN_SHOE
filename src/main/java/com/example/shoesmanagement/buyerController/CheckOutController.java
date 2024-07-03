@@ -392,6 +392,8 @@ public class CheckOutController {
 
         List<HoaDonChiTiet> hoaDonChiTietList = hoaDonChiTietService.findByHoaDon(hoaDon);
 
+            /// lay gio hang
+        //
         for (HoaDonChiTiet xx : hoaDonChiTietList) {
             GioHangChiTiet gioHangChiTiet = ghctService.findByCTSPActive(xx.getChiTietGiay());
             if (gioHangChiTiet != null) {
