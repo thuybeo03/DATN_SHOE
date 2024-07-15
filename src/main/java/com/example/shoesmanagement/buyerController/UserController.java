@@ -79,11 +79,12 @@ public class UserController {
     private String getSettingAccount(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
         UserForm(model, khachHang);
-//        showThongBao(model, khachHang);
+
+        model.addAttribute("pagesettingAccount",true);
         return "online/user";
     }
+
 
     @GetMapping("/addresses")
     private String getAddressAccount(Model model) {
@@ -635,7 +636,7 @@ public class UserController {
                 lichSuThanhToan.setNoiDungThanhToan("Hủy đơn hàng chưa thanh toán ");
                 lsThanhToanService.addLSTT(lichSuThanhToan);
             }
-            hoaDonHuy.setTrangThai(4);
+            hoaDonHuy.setTrangThai(5);
             hoaDonHuy.setLyDoHuy(lyDoHuy);
             hoaDonHuy.setTgHuy(new Date());
             hoaDonService.add(hoaDonHuy);
@@ -677,7 +678,7 @@ public class UserController {
                 lichSuThanhToan.setNoiDungThanhToan("Hủy đơn hàng chưa thanh toán");
                 lsThanhToanService.addLSTT(lichSuThanhToan);
             }
-            hoaDonHuy.setTrangThai(4);
+            hoaDonHuy.setTrangThai(5);
             hoaDonHuy.setLyDoHuy(lyDoHuy);
             hoaDonHuy.setTgHuy(new Date());
             hoaDonService.add(hoaDonHuy);

@@ -2,10 +2,7 @@ package com.example.shoesmanagement.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.text.DecimalFormat;
 import java.util.Date;
@@ -72,25 +69,12 @@ public class ChiTietGiay {
     @Column(name = "tg_Sua")
     private Date tgSua;
 
-    @Column(name = "ma_NV_Sua")
-    private String maNVSua;
-
-
-
-    @Column(name = "LD_Sua")
-    private String lyDoSua; 
-    
     @Column(name = "barCode")
     private String barcode;
 
-    @Column(name = "trang_thai_mail")
-    private Integer trangThaiMail;
 
-    @Column(name = "id_chi_tiet_giay_old")
-    private UUID idCTGOld;
 
-    public String getFormattedGiaBan() {
-        DecimalFormat decimalFormat = new DecimalFormat("#,### VNĐ");
-        return decimalFormat.format(giaBan);
-    }
+
+
+
 }

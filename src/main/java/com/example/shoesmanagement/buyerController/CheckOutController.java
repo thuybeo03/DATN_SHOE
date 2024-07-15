@@ -210,6 +210,10 @@ public class CheckOutController {
     public String addNewAddressPlaceOrder(Model model, @RequestParam(name = "defaultSelected", defaultValue = "false") boolean defaultSelected) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         HoaDon hoaDon = (HoaDon) session.getAttribute("hoaDonTaoMoi");
         GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
         List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
@@ -266,6 +270,7 @@ public class CheckOutController {
                 .mapToDouble(HoaDonChiTiet::getDonGia)
                 .sum();
 
+        // Cập nhật phí vận chuyển sau khi thêm địa chỉ mới
         Double shippingFee = shippingFeeService.calculatorShippingFee(hoaDon, 25000.0);
         hoaDon.setTongTien(total + shippingFee);
         hoaDonService.add(hoaDon);
@@ -292,7 +297,9 @@ public class CheckOutController {
         model.addAttribute("addNewAddressNotNull", true);
         model.addAttribute("billPlaceOrder", hoaDon);
         model.addAttribute("shippingFee", shippingFee2);
-        model.addAttribute("toTalOder", total + shippingFee);
+
+        model.addAttribute("toTalOder", total + shippingFee2 - giaTienGiam);
+
 
         session.removeAttribute("diaChiGiaoHang");
         session.setAttribute("diaChiGiaoHang", diaChiKH);
