@@ -6,6 +6,7 @@ import com.example.shoesmanagement.repository.HoaDonChiTietRepository;
 import com.example.shoesmanagement.repository.HoaDonRepository;
 import com.example.shoesmanagement.service.GiayChiTietService;
 import com.example.shoesmanagement.service.HoaDonService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -115,6 +116,24 @@ public class HoaDonServieImpl implements HoaDonService {
     }
 
     @Override
+    public void updateHoaDon(HoaDon hoaDon) {
+        double tongTienSanPham = 0;
+        int tongSP = 0;
+
+        for (HoaDonChiTiet hdc : hoaDon.getHoaDonChiTiets()) {
+            tongTienSanPham += hdc.getDonGia() * hdc.getSoLuong();
+            tongSP += hdc.getSoLuong();
+        }
+
+        hoaDon.setTongTienSanPham(tongTienSanPham);
+        hoaDon.setTongTien(hoaDon.getTongTienSanPham() + hoaDon.getTienShip());
+        hoaDon.setTongSP(tongSP);
+
+        hoaDonRepository.save(hoaDon);
+    }
+
+
+    @Override
     public List<HoaDon> listHoaDonHuyAndThanhCongByNhanVien(NhanVien nhanVien) {
         return hoaDonRepository.findByNhanVienAndLoaiHDAndTrangThaiOrTrangThaiOrderByTgTaoDesc(nhanVien,0,3,4);
     }
@@ -127,5 +146,11 @@ public class HoaDonServieImpl implements HoaDonService {
     @Override
     public List<HoaDon> listAllHoaDonByNhanVienHienTai(NhanVien nhanVien) {
         return hoaDonRepository.listAllHoaDonByNhanVienHienTai();
+    }
+
+    @Transactional
+    @Override
+    public void deleteByChiTietGiay(ChiTietGiay chiTietGiay) {
+        hoaDonChiTietRepository.deleteByChiTietGiay(chiTietGiay);
     }
 }

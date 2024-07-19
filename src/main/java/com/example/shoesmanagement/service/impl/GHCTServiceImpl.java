@@ -31,7 +31,7 @@ public class GHCTServiceImpl implements GHCTService {
     }
 
     @Override
-    public GioHangChiTiet findByCTSPActive(ChiTietGiay chiTietGiay) {
+    public GioHangChiTiet findByCTSPActiveAndTrangThai(ChiTietGiay chiTietGiay, int trangThai) {
         return ghctRepository.findByChiTietGiayAndTrangThai(chiTietGiay, 1);
     }
 

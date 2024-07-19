@@ -1,6 +1,8 @@
+
 package com.example.shoesmanagement.buyerController;
 
 import com.example.shoesmanagement.model.*;
+import com.example.shoesmanagement.repository.KhuyenMaiRepository;
 import com.example.shoesmanagement.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -60,6 +62,11 @@ public class UserController {
     @Autowired
     private VNPayService vnPayService;
 
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+
+    @Autowired
+    private KhuyenMaiRepository khuyenMaiRepository;
 
     @ModelAttribute("dsTrangThai")
     public Map<Integer, String> getDsTrangThai() {
@@ -83,7 +90,11 @@ public class UserController {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
         KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
-        model.addAttribute("khachHang", khachHang1);
+        model.addAttribute("khachHang1", khachHang1);
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
         model.addAttribute("pagesettingAccount",true);
@@ -94,19 +105,19 @@ public class UserController {
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
         String hoTenKH = request.getParameter("hoTenKH");
         String gioiTinh = request.getParameter("gioiTinh");
-        String ngaySinhStr = request.getParameter("ngaySinh");
+        String ngaySinh = request.getParameter("ngaySinh");
         String emailKH = request.getParameter("emailKH");
-        Date ngaySinh = null;
-        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        Date dateOfBirth = null;
         try {
-            ngaySinh = dateFormat.parse(ngaySinhStr);
+            dateOfBirth = formatter.parse(ngaySinh);
         } catch (ParseException e) {
             e.printStackTrace();
         }
         KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
         khachHang1.setHoTenKH(hoTenKH);
         khachHang1.setGioiTinh(Integer.parseInt(gioiTinh));
-        khachHang1.setNgaySinh(ngaySinh);
+        khachHang1.setNgaySinh(dateOfBirth);
         khachHang1.setEmailKH(emailKH);
         khachHangService.save(khachHang1);
         return "redirect:/buyer/setting";
@@ -117,7 +128,11 @@ public class UserController {
     private String getAddressAccount(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
         UserForm(model, khachHang);
 
         List<DiaChiKH> diaChiKHDefaultList = diaChiKHService.findbyKhachHangAndLoaiAndTrangThai(khachHang, true, 1);
@@ -134,14 +149,18 @@ public class UserController {
         model.addAttribute("pageAddressesUser", true);
         model.addAttribute("editAddresses", true);
         model.addAttribute("addNewAddressSetting", true);
-        showThongBao(model, khachHang);
+
         return "online/user";
     }
 
     @PostMapping("/addresses/add")
     private String addnewAddress(Model model, @RequestParam(name = "defaultSelected", defaultValue = "false") boolean defaultSelected) {
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
         String nameAddress = request.getParameter("nameAddress");
         String fullName = request.getParameter("fullName");
         String phoneAddress = request.getParameter("phoneAddress");
@@ -235,6 +254,15 @@ public class UserController {
     private String getPurchaseAccount(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
         List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
         List<HoaDon> listHoaDonByKhachHang = hoaDonService.findHoaDonByKhachHang(khachHang);
@@ -257,13 +285,22 @@ public class UserController {
     private String getPurchasePay(Model model){
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
         List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 0);
-
+        Integer sumProductInCart = listGHCTActive.size();
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
-
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("pagePurchaseUser",true);
         model.addAttribute("purchasePay",true);
         model.addAttribute("type2","active");
@@ -274,12 +311,22 @@ public class UserController {
     private String getPurchaseShip(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
         List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 1);
-
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
         model.addAttribute("pagePurchaseUser", true);
         model.addAttribute("purchaseShip", true);
@@ -287,36 +334,85 @@ public class UserController {
 
         return "online/user";
     }
+    @GetMapping("/purchase/confirm")
+    private String getPurchaseShipConfirm(Model model) {
+
+        KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
+        UserForm(model, khachHang);
+
+        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 2);
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
+        model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
+        model.addAttribute("pagePurchaseUser", true);
+        model.addAttribute("purchaseShipConfirm", true);
+        model.addAttribute("type4", "active");
+
+        return "online/user";
+    }
     @GetMapping("/purchase/receive")
     private String getPurchaseReceive(Model model){
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
-        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 2);
-
+        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 3);
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
 
         model.addAttribute("pagePurchaseUser",true);
         model.addAttribute("purchaseReceive",true);
-        model.addAttribute("type4","active");
+        model.addAttribute("type5","active");
         return "online/user";
     }
     @GetMapping("/purchase/completed")
     private String getPurchaseCompleted(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
-        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 3);
-
+        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 4);
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
 
         model.addAttribute("pagePurchaseUser", true);
         model.addAttribute("purchaseCompleted", true);
-        model.addAttribute("type5", "active");
+        model.addAttribute("type6", "active");
         return "online/user";
     }
 
@@ -324,16 +420,27 @@ public class UserController {
     private String getPurchaseCancel(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
-        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 4);
-
+        List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 5);
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
 
         model.addAttribute("pagePurchaseUser", true);
         model.addAttribute("purchaseCancel", true);
-        model.addAttribute("type6", "active");
+        model.addAttribute("type7", "active");
         return "online/user";
     }
 
@@ -341,29 +448,58 @@ public class UserController {
     private String getPurchaseRefund(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
         List<HoaDon> listHoaDonByKhachHang = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 3);
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
 
         model.addAttribute("pagePurchaseUser", true);
         model.addAttribute("purchaseRefund", true);
-        model.addAttribute("type7", "active");
+        model.addAttribute("type8", "active");
         return "online/user";
     }
 
     @GetMapping("/purchase/bill/detail/{idHD}")
     private String getDetailForm(Model model, @PathVariable UUID idHD){
-
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if(khachHang == null) return "redirect:/buyer/login";
+
         List<DiaChiKH> diaChiKHList = diaChiKHService.findbyKhachHangAndLoaiAndTrangThai(khachHang, false, 1);
         DiaChiKH diaChiKHDefault = diaChiKHService.findDCKHDefaulByKhachHang(khachHang);
+
+        List<KhuyenMai> khuyenMai = khuyenMaiService.getAllKhuyenMai();
+        model.addAttribute("khuyenMai", khuyenMai);
 
         UserForm(model, khachHang);
 
         HoaDon hoaDon= hoaDonService.getOne(idHD);
+
+        Double giaTienGiam = null;
+        if (hoaDon.getKhuyenMai() != null && hoaDon.getKhuyenMai().getGiaTienGiam() != null) {
+            giaTienGiam = hoaDon.getKhuyenMai().getGiaTienGiam();
+        } else {
+            giaTienGiam = 0.0;
+        }
+        model.addAttribute("giaTienGiam", giaTienGiam);
+
 
         int trangThai = hoaDon.getTrangThai();
         if (trangThai == 0){
@@ -380,12 +516,14 @@ public class UserController {
             Date ngayKetThuc = calendar.getTime();
 
             model.addAttribute("ngayKetThuc", ngayKetThuc);
-
+            GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+            List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+            Integer sumProductInCart = listGHCTActive.size();
+            model.addAttribute("sumProductInCart", sumProductInCart);
 
             model.addAttribute("detailBillPay",true);
             model.addAttribute("modalThayDoiPhuongThucThanhToan",true);
             model.addAttribute("billDetailPay", hoaDon);
-
             session.removeAttribute("hoaDonPayDetail");
             session.setAttribute("hoaDonPayDetail", hoaDon);
 
@@ -397,7 +535,6 @@ public class UserController {
 
             model.addAttribute("detailBillShip",true);
             model.addAttribute("billDetailShip", hoaDon);
-
             List<ViTriDonHang> viTriDonHangList = viTriDonHangServices.findByGiaoHang(giaoHangListActive);
             model.addAttribute("listViTriDonHang", viTriDonHangList);
 
@@ -407,13 +544,26 @@ public class UserController {
         }else if (trangThai == 2){
 
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
+            model.addAttribute("giaoHangListActive", giaoHangListActive);
+            model.addAttribute("modalThayDoiPhuongThucThanhToan",true);
+
+            model.addAttribute("detailBillShipConfirm",true);
+            model.addAttribute("billShipConfirm", hoaDon);
+            List<ViTriDonHang> viTriDonHangList = viTriDonHangServices.findByGiaoHang(giaoHangListActive);
+            model.addAttribute("listViTriDonHang", viTriDonHangList);
+
+            session.removeAttribute("hoaDonPayDetail");
+            session.setAttribute("hoaDonPayDetail", hoaDon);
+
+        }else if (trangThai == 3){
+
+            GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
             List<ViTriDonHang> viTriDonHangList = viTriDonHangServices.findByGiaoHang(giaoHangListActive);
 
             model.addAttribute("listViTriDonHang", viTriDonHangList);
             model.addAttribute("detailBillRecieve",true);
             model.addAttribute("billDetailRecieve", hoaDon);
-
-        }else if (trangThai == 3){
+        }else if (trangThai == 4){
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
 
             Calendar calendar = Calendar.getInstance();
@@ -428,66 +578,44 @@ public class UserController {
 
             model.addAttribute("detailBillCompleted",true);
             model.addAttribute("billDetailCompleted", hoaDon);
-        }else if (trangThai == 4){
+        }else if (trangThai == 5){
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
 
             List<ViTriDonHang> viTriDonHangList = viTriDonHangServices.findByGiaoHang(giaoHangListActive);
             model.addAttribute("listViTriDonHang", viTriDonHangList);
             model.addAttribute("detailBillCancel",true);
             model.addAttribute("billDetailCancel", hoaDon);
-
-        }else if (trangThai == 5){
+        }else if (trangThai == 6){
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
             model.addAttribute("giaoHangListActive", giaoHangListActive);
 
             model.addAttribute("detailBillRefund",true);
             model.addAttribute("billDetailRefund", hoaDon);
-
         }
 
         model.addAttribute("listAddressKH", diaChiKHList);
         model.addAttribute("diaChiKHDefault", diaChiKHDefault);
-
         return "online/user";
     }
 
-    @PostMapping("/purchaser/bill/refund/{idHD}")
-    private String getDetailRefundForm(Model model, @PathVariable UUID idHD){
 
-        KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-        List<DiaChiKH> diaChiKHList = diaChiKHService.findbyKhachHangAndLoaiAndTrangThai(khachHang, false, 1);
-        DiaChiKH diaChiKHDefault = diaChiKHService.findDCKHDefaulByKhachHang(khachHang);
-
-        UserForm(model, khachHang);
-
-        HoaDon hoaDon= hoaDonService.getOne(idHD);
-
-        session.removeAttribute("billRefundDetail");
-        session.setAttribute("billRefundDetail", hoaDon);
-
-        model.addAttribute("diaChiKHDefault", diaChiKHDefault);
-        model.addAttribute("addNewAddressNotNull", true);
-        model.addAttribute("listAddressKH", diaChiKHList);
-
-        model.addAttribute("detailBillRefundMoney", true);
-        model.addAttribute("billDetailRefund", hoaDon);
-
-        session.removeAttribute("diaChiChiTiet");
-        session.removeAttribute("sdtNguoiNhan");
-        session.removeAttribute("hoTenNguoiNhan");
-
-//        session.setAttribute("diaChiChiTiet", hoaDon.getDiaChiNguoiNhan());
-//        session.setAttribute("sdtNguoiNhan", hoaDon.getSdtNguoiNhan());
-//        session.setAttribute("hoTenNguoiNhan", hoaDon.getTenNguoiNhan());
-
-
-        return "online/user";
-    }
 
     @GetMapping("/purchase/bill/detail/cancel/{idHD}")
     private String getDetailCancelForm(Model model, @PathVariable UUID idHD){
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         List<DiaChiKH> diaChiKHList = diaChiKHService.findbyKhachHangAndLoaiAndTrangThai(khachHang, false, 1);
         DiaChiKH diaChiKHDefault = diaChiKHService.findDCKHDefaulByKhachHang(khachHang);
 
@@ -520,6 +648,19 @@ public class UserController {
             session.setAttribute("hoaDonPayDetail", hoaDon);
 
         }else if (trangThai == 2){
+            model.addAttribute("modalHuyHoaDonInDetailBillPayConfirm",true);
+
+            GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
+            model.addAttribute("giaoHangListActive", giaoHangListActive);
+            model.addAttribute("modalThayDoiPhuongThucThanhToan",true);
+
+            model.addAttribute("detailBillShipConfirm",true);
+            model.addAttribute("billShipConfirm", hoaDon);
+
+            session.removeAttribute("hoaDonPayDetail");
+            session.setAttribute("hoaDonPayDetail", hoaDon);
+
+        }else if (trangThai == 3){
 
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
             model.addAttribute("giaoHangListActive", giaoHangListActive);
@@ -527,20 +668,20 @@ public class UserController {
             model.addAttribute("detailBillRecieve",true);
             model.addAttribute("billDetailRecieve", hoaDon);
 
-        }else if (trangThai == 3){
+        }else if (trangThai == 4){
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
             model.addAttribute("giaoHangListActive", giaoHangListActive);
 
             model.addAttribute("detailBillCompleted",true);
             model.addAttribute("billDetailCompleted", hoaDon);
-        }else if (trangThai == 4){
+        }else if (trangThai == 5){
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
             model.addAttribute("giaoHangListActive", giaoHangListActive);
 
             model.addAttribute("detailBillCancel",true);
             model.addAttribute("billDetailCancel", hoaDon);
 
-        }else if (trangThai == 5){
+        }else if (trangThai == 6){
             GiaoHang giaoHangListActive = hoaDon.getGiaoHang();
             model.addAttribute("giaoHangListActive", giaoHangListActive);
 
@@ -557,10 +698,21 @@ public class UserController {
 
     @PostMapping("/purchase/pay/change/payment/{idHD}")
     private String changePaymentMethod(Model model, @PathVariable UUID idHD){
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         HoaDon hoaDon = (HoaDon) session.getAttribute("hoaDonPayDetail");
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         String hinhThucThayDoi = request.getParameter("paymentMethod");
 
         if (hinhThucThayDoi.equals("qrCodeBanking")){
@@ -590,8 +742,8 @@ public class UserController {
             hoaDon.setTrangThai(0);
             hoaDonService.add(hoaDon);
 
-            session.removeAttribute("HoaDonThanhToanNhanNgu");
-            session.setAttribute("HoaDonThanhToanNhanNgu", hoaDon);
+            session.removeAttribute("HoaDonThanhToan");
+            session.setAttribute("HoaDonThanhToan", hoaDon);
 
             return "redirect:" + vnpayUrl;
 
@@ -610,8 +762,20 @@ public class UserController {
     @PostMapping("/purchase/bill/pay/cancel/{idHD}")
     private String cancelBillPay(Model model, @PathVariable UUID idHD){
         String lyDoHuy = request.getParameter("lyDoHuy");
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         HoaDon hoaDonHuy = hoaDonService.getOne(idHD);
 
         LichSuThanhToan lichSuThanhToan =  new LichSuThanhToan();
@@ -643,7 +807,7 @@ public class UserController {
                 }
             }
 
-            hoaDonHuy.setTrangThai(4);
+            hoaDonHuy.setTrangThai(5);
             hoaDonHuy.setLyDoHuy(lyDoHuy);
             hoaDonHuy.setTgHuy(new Date());
             hoaDonService.add(hoaDonHuy);
@@ -683,7 +847,7 @@ public class UserController {
                 lichSuThanhToan.setNoiDungThanhToan("Hủy đơn hàng chưa thanh toán");
                 lsThanhToanService.addLSTT(lichSuThanhToan);
             }
-            hoaDonHuy.setTrangThai(4);
+            hoaDonHuy.setTrangThai(5);
             hoaDonHuy.setLyDoHuy(lyDoHuy);
             hoaDonHuy.setTgHuy(new Date());
             hoaDonService.add(hoaDonHuy);
@@ -711,7 +875,6 @@ public class UserController {
             hoaDonService.add(hoaDonHuy);
         }
         return "redirect:/buyer/purchase/cancel";
-
     }
 
     @GetMapping("/purchase/bill/pay/{idHD}")
@@ -725,9 +888,12 @@ public class UserController {
         hoaDon.setHinhThucThanhToan(1);
         hoaDon.setTrangThai(0);
         hoaDonService.add(hoaDon);
-
-        session.removeAttribute("HoaDonThanhToanNhanNgu");
-        session.setAttribute("HoaDonThanhToanNhanNgu", hoaDon);
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
+        session.removeAttribute("HoaDonThanhToan");
+        session.setAttribute("HoaDonThanhToan", hoaDon);
 
         return "redirect:" + vnpayUrl;
 
@@ -741,9 +907,12 @@ public class UserController {
 
         GioHang gioHang = (GioHang) session.getAttribute("GHLogged") ;
 
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         for (HoaDonChiTiet x:hoaDonChiTietList) {
 
-            GioHangChiTiet gioHangChiTietExist = ghctService.findByCTSPActive(x.getChiTietGiay());
+            GioHangChiTiet gioHangChiTietExist = ghctService.findByCTSPActiveAndTrangThai(x.getChiTietGiay(),1);
 
             if (gioHangChiTietExist != null){
 
@@ -777,7 +946,15 @@ public class UserController {
 
         HoaDon hoaDon = hoaDonService.getOne(idHD);
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         String nameAddress = request.getParameter("nameAddress");
         String fullName = request.getParameter("fullName");
         String phoneAddress = request.getParameter("phoneAddress");
@@ -835,7 +1012,10 @@ public class UserController {
         List<HoaDon> listHoaDonByKhachHang = hoaDonService.findHoaDonByKhachHang(khachHang);
 
         List<HoaDon> listHoaDonChoThanhToan = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 0);
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("pagePurchaseUser",true);
         model.addAttribute("purchaseAll",true);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
@@ -852,7 +1032,15 @@ public class UserController {
     private String changeAddressNhanHang(Model model, @PathVariable UUID idHD){
         HoaDon hoaDon = hoaDonService.getOne(idHD);
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (khachHang != null) {
+            KhachHang khachHang1 = khachHangService.getByIdKhachHang(khachHang.getIdKH());
+            model.addAttribute("khachHang1", khachHang1);
+        } else {
+        }
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UUID idDCKH = UUID.fromString(request.getParameter("idDCKH"));
 
         DiaChiKH diaChiKH = diaChiKHService.findByIdDiaChiKH(idDCKH);
@@ -883,7 +1071,10 @@ public class UserController {
         UserForm(model, khachHang);
         List<HoaDon> listHoaDonByKhachHang = hoaDonService.findHoaDonByKhachHang(khachHang);
         List<HoaDon> listHoaDonChoThanhToan = hoaDonService.listHoaDonKhachHangAndTrangThaiOnline(khachHang, 0);
-
+        GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
+        List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
+        Integer sumProductInCart = listGHCTActive.size();
+        model.addAttribute("sumProductInCart", sumProductInCart);
         model.addAttribute("pagePurchaseUser",true);
         model.addAttribute("purchaseAll",true);
         model.addAttribute("listAllHDByKhachHang", listHoaDonByKhachHang);
@@ -899,20 +1090,27 @@ public class UserController {
     private String getNotidicationAccount(Model model) {
 
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
-
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         UserForm(model, khachHang);
 
         model.addAttribute("pageNotificationUser", true);
         return "online/user";
     }
 
-    private void UserForm(Model model, KhachHang khachHang) {
+    private String UserForm(Model model, KhachHang khachHang) {
         GioHang gioHang = (GioHang) session.getAttribute("GHLogged");
         model.addAttribute("fullNameLogin", khachHang.getHoTenKH());
-
+        if (session.getAttribute("fullNameLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/login";
+        }
         List<GioHangChiTiet> listGHCTActive = ghctService.findByGHActive(gioHang);
         Integer sumProductInCart = listGHCTActive.size();
         model.addAttribute("sumProductInCart", sumProductInCart);
+        return null;
     }
 
     public String generateRandomNumbers() {
@@ -925,19 +1123,6 @@ public class UserController {
         return sb.toString();
     }
 
-    private void showThongBao(Model model, KhachHang khachHang) {
-        int soThongBao = 0;
 
-        List<ThongBaoKhachHang> thongBaoKhachHangs = thongBaoServices.findByKhachHang(khachHang);
-        for (ThongBaoKhachHang x : thongBaoKhachHangs) {
-            if (x.getTrangThai() == 1) {
-                soThongBao++;
-            }
-        }
-
-        model.addAttribute("soThongBao", soThongBao);
-        model.addAttribute("listThongBao", thongBaoKhachHangs);
-    }
 
 }
-

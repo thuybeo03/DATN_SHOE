@@ -2,18 +2,24 @@ package com.example.shoesmanagement.controller;
 
 import com.example.shoesmanagement.model.*;
 import com.example.shoesmanagement.repository.HoaDonChiTietRepository;
+import com.example.shoesmanagement.repository.HoaDonRepository;
+import com.example.shoesmanagement.repository.KhuyenMaiRepository;
 import com.example.shoesmanagement.repository.SizeRepository;
 import com.example.shoesmanagement.service.*;
 import com.example.shoesmanagement.viewModel.GiayViewModel;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @RequestMapping("/manage/bill/")
 @Controller
@@ -26,6 +32,10 @@ public class HoaDonOnlineController {
 
     @Autowired
     private GHCTService ghctService;
+    @Autowired
+    private KhuyenMaiService khuyenMaiService;
+    @Autowired
+    private KhachHangService khachHangService;
 
     @Autowired
     private HoaDonChiTietRepository hoaDonChiTietRepository;
@@ -65,6 +75,11 @@ public class HoaDonOnlineController {
     private ChucVuService chucVuService;
     @Autowired
     private HttpSession httpSession;
+    @Autowired
+    private HoaDonRepository hoaDonRepository;
+
+    @Autowired
+    private KhuyenMaiRepository khuyenMaiRepository;
 
     @GetMapping("online")
     private String manageBillOnline(Model model) {
@@ -165,11 +180,32 @@ public class HoaDonOnlineController {
         hoaDon.setTgHuy(date);
         hoaDon.setTrangThai(5);
 
+//        KhuyenMai khuyenMai = hoaDon.getKhuyenMai();
+//        khuyenMai.setSoLuong(khuyenMai.getSoLuong() + 1);
+//        khuyenMai.setSoLuongDaDung(khuyenMai.getSoLuongDaDung() - 1);
+//        khuyenMaiRepository.saveAndFlush(khuyenMai);
+
+        if (hoaDon.getKhuyenMai() != null) {   // nếu hoá đơn có dùng khuyến mãi
+            KhuyenMai kmcsdl = khuyenMaiRepository.findById(hoaDon.getKhuyenMai().getIdKM()).get();
+            int slmax = kmcsdl.getSoLuong();
+            int sl = kmcsdl.getSoLuongDaDung();
+            if (sl == slmax) {    // nếu số lượng khuyến mãi đã hết thì xoá mã khuyến mãi ra khỏi hoá đơn và trả về trang thanh toán
+                hoaDon.setKhuyenMai(null);
+                hoaDonRepository.saveAndFlush(hoaDon);
+//                return "redirect:/buyer/checkout?" + session.getAttribute("checkoutParams" + khachHang.getIdKH()).toString();
+                return "redireact:/buyer/cart";
+            } else if (sl < slmax) {    // nếu số lượng khuyến mãi nhỏ hơn sl đã set thì tăng sl lên 1
+                kmcsdl.setSoLuongDaDung(sl + 1);
+                khuyenMaiRepository.saveAndFlush(kmcsdl);
+            }
+        }
+
         hoaDonService.save(hoaDon);
 
         showData(model);
         showTab3(model);
         model.addAttribute("message", "Hóa đơn đã được hủy thành công.");
+
         return "manage/manage-bill-online";
     }
 
@@ -224,7 +260,7 @@ public class HoaDonOnlineController {
         if (listAllHoaDonOnline != null) {
             for (HoaDon x : listAllHoaDonOnline) {
                 if (x.getTrangThai() == 6 || x.getTrangThai() == 7) {
-//                    System.out.println("abc");
+                    System.out.println("abc");
                 } else {
                     tongTienHoaDon += x.getTongTien();
                 }
@@ -234,7 +270,7 @@ public class HoaDonOnlineController {
         if (listAllHoaDonOnline != null) {
             for (HoaDon x : listAllHoaDonOnline) {
                 if (x.getTrangThai() == 6 || x.getTrangThai() == 7) {
-//                    System.out.println("abc");
+                    System.out.println("abc");
                 } else {
                     if (x.getHinhThucThanhToan() == 1) {
                         soLuongHoaDonBanking++;
@@ -302,7 +338,7 @@ public class HoaDonOnlineController {
     }
 
     @GetMapping("/search")
-    public String search(@RequestParam(value = "keyword", required = false)String keyword, Model model,
+    public String search(@RequestParam(value = "keyword", required = false) String keyword, Model model,
                          RedirectAttributes redirectAttributes) {
         UUID idHoaDon = (UUID) httpSession.getAttribute("idHoaDon");
         if (keyword.length() >= 3 && keyword.substring(0, 3).equals("CTG")) {
@@ -310,7 +346,7 @@ public class HoaDonOnlineController {
             if (chiTietGiay == null) {
                 redirectAttributes.addFlashAttribute("messageError", true);
                 redirectAttributes.addFlashAttribute("tbaoError", "Không tìm thấy sản mã phẩm ");
-                return "redirect:/manage/bill/online" ;
+                return "redirect:/manage/bill/online";
             }
             model.addAttribute("idHoaDon", idHoaDon);
         } else {
@@ -318,7 +354,7 @@ public class HoaDonOnlineController {
             if (list.isEmpty()) {
                 redirectAttributes.addFlashAttribute("messageError", true);
                 redirectAttributes.addFlashAttribute("tbaoError", "Không tìm thấy sản phẩm");
-                return "redirect:/manage/bill/online" ;
+                return "redirect:/manage/bill/online";
             }
             model.addAttribute("listSanPham", list);
         }
@@ -361,42 +397,112 @@ public class HoaDonOnlineController {
         return "redirect:/manage-bill-online/" + idHoaDon;
     }
 
-    @GetMapping("/chon-size2/{idGiay}/{mauSac}")
-    public String chonSize(@PathVariable(value = "idGiay") UUID idGiay,
-                           @PathVariable(value = "mauSac") String mauSac, Model model, HttpSession session, RedirectAttributes redirectAttributes) {
 
-        UUID idHoaDon = (UUID) session.getAttribute("idHoaDon");
+    @PostMapping("/deleteChiTietGiay/{idCTG}/{idHD}")
+    @ResponseBody
+    public ResponseEntity<String> deleteChiTietGiay(@PathVariable UUID idCTG, @PathVariable UUID idHD) {
+        try {
+            // Lấy hóa đơn cần cập nhật
+            HoaDon hoaDon = hoaDonService.getOne(idHD);
+
+            // Lấy chi tiết giày cần xóa
+            ChiTietGiay chiTietGiay = giayChiTietService.getByIdChiTietGiay(idCTG);
+
+            // Xóa chi tiết hóa đơn
+            hoaDonChiTietRepository.deleteHoaDonChiTietByChiTietGiay(chiTietGiay.getIdCTG());
+
+            // Cập nhật lại hóa đơn
+            hoaDonService.updateHoaDon(hoaDon);
+
+            // Trả về phản hồi thành công
+            return ResponseEntity.ok("Sản phẩm đã được xoá khỏi giỏ hàng thành công!");
+        } catch (Exception e) {
+            // Trả về phản hồi lỗi
+            return ResponseEntity.status(500).body("Có lỗi xảy ra trong quá trình xoá sản phẩm!");
+        }
+    }
+
+
+    @GetMapping("/hoadon/{idHoaDon}")
+    public String chonHoaDon(@PathVariable("idHoaDon") UUID idHoaDon, Model model,
+                             @ModelAttribute("messageSuccess") String messageSuccess,
+                             @ModelAttribute("messageError") String messageError, RedirectAttributes redirectAttributes,
+                             HttpSession httpSession) {
+
+        NhanVien nhanVien = (NhanVien) httpSession.getAttribute("staffLogged");
+        List<HoaDon> listHoaDonHomNay = hoaDonService.listAllHoaDonByNhanVienHienTai(nhanVien);
+        model.addAttribute("listHoaDonHomNay", listHoaDonHomNay);
+
         if (idHoaDon == null) {
             redirectAttributes.addFlashAttribute("messageError", true);
             redirectAttributes.addFlashAttribute("tbaoError", "Bạn chưa chọn hóa đơn");
-            return "redirect:/manage-bill-online/online";
+            model.addAttribute("listHoaDon", hoaDonService.getListHoaDonChuaThanhToan());
+            return "redirect:/manage/bill/online";
+
         }
 
         List<GiayViewModel> listG = giayViewModelService.getAllVm();
         model.addAttribute("listSanPham", listG);
-        Giay giay = giayService.getByIdGiay(idGiay);
-        List<ChiTietGiay> sizeList = sizeRepository.findByIdGiayAndMauSac2(idGiay, mauSac);
 
-        model.addAttribute("gioHang", hoaDonChiTietService.findByIdHoaDon(idHoaDon));
-        model.addAttribute("giay", giay);
-        model.addAttribute("listChiTietGiay", sizeList);
-        model.addAttribute("idHoaDon", idHoaDon);
-        model.addAttribute("showModal", true);
+
+        List<KhuyenMai> khuyenMai = khuyenMaiService.getAllKhuyenMai();
+        model.addAttribute("khuyenMai", khuyenMai);
+
+        HoaDon hd = hoaDonService.getOne(idHoaDon);
+        double tongTienSP = hd.getTongTienSanPham() != null ? hd.getTongTienSanPham() : 0;
+
+        List<KhuyenMai> listKM = hoaDonRepository.listDieuKienKhuyenMai(tongTienSP);
+        model.addAttribute("dieuKienKhuyenMai", listKM);
+
+        httpSession.removeAttribute("idHoaDon");
+        httpSession.setAttribute("idHoaDon", idHoaDon);
+
+        List<HoaDonChiTiet> findByIdHoaDon = hoaDonChiTietService.findByIdHoaDon(idHoaDon);
+        model.addAttribute("gioHang", findByIdHoaDon);
+        model.addAttribute("listHoaDon", hoaDonService.getListHoaDonChuaThanhToan());
+
+        if (findByIdHoaDon.isEmpty()) {
+            model.addAttribute("messageGioHang", "Trong giỏ hàng chưa có sản phẩm");
+        }
+        double tongTienSanPham = hoaDonChiTietService.tongTienSanPham(findByIdHoaDon);
+        double tongTien = hoaDonChiTietService.tongTien(findByIdHoaDon);
+
+        // Giả sử KhuyenMai có phương thức getGiaTri() để lấy giá trị giảm giá
+        KhuyenMai khuyenMai1 = hd.getKhuyenMai();
+        double giaTienGiam = (khuyenMai1 != null && khuyenMai1.getGiaTienGiam() != null) ? khuyenMai1.getGiaTienGiam() : 0;
+
+        // Nếu tổng tiền sản phẩm không đủ điều kiện khuyến mãi thì bỏ khuyến mãi
+        if (tongTienSanPham < listKM.stream().mapToDouble(KhuyenMai::getDieuKienKMBill).min().orElse(Double.MAX_VALUE)) {
+            giaTienGiam = 0;
+        }
         model.addAttribute("tongTienSanPham", tongTienSanPham);
-        model.addAttribute("tongTien", tongTien);
+        model.addAttribute("tongTien", tongTien - giaTienGiam);
+        model.addAttribute("giaTienGiam", giaTienGiam);
+        model.addAttribute("listKhachHang", khachHangService.findKhachHangByTrangThai());
+        model.addAttribute("tongSanPham", findByIdHoaDon.size());
 
-        return "redirect:/manage-bill-online/online";
-    }
+        httpSession.setAttribute("tongSP", findByIdHoaDon.size());
+        httpSession.setAttribute("tongTienSanPham", tongTienSanPham);
+        httpSession.setAttribute("tongTien", tongTien - giaTienGiam);
+        httpSession.setAttribute("giaTienGiam", giaTienGiam);
 
-    @PostMapping("/deleteChiTietGiay/{idCTG}")
-    public String deleteChiTietGiay(Model model, @PathVariable UUID idCTG, RedirectAttributes redirectAttribute) {
-        ChiTietGiay chiTietGiay = giayChiTietService.getByIdChiTietGiay(idCTG);
-        hoaDonChiTietRepository.deleteHoaDonChiTietByChiTietGiay(chiTietGiay.getIdCTG());
+        // Cập nhật tổng tiền và tổng tiền sau khi giảm trong hóa đơn
+        HoaDon hoaDon = hoaDonService.getOne(idHoaDon);
+        hoaDon.setTongTienSanPham(tongTienSanPham);
+        hoaDon.setTongTien(tongTien - giaTienGiam);
+        hoaDonService.add(hoaDon);
 
-
-
-        redirectAttribute.addFlashAttribute("successMessage", "Sản phẩm đã được xoá khỏi giỏ hàng thành công!");
-        return "redirect:/manage/bill/online"; // Điều hướng về trang danh sách chi tiết giày
+        // Thông tin khách hàng
+        KhachHang khachHang = hoaDon.getKhachHang();
+        model.addAttribute("khachHang", khachHang != null ? khachHang : null);
+        if (messageSuccess == null || !"true".equals(messageSuccess)) {
+            model.addAttribute("messageSuccess", false);
+        }
+        if (messageError == null || !"true".equals(messageError)) {
+            model.addAttribute("messageError", false);
+        }
+        model.addAttribute("idHoaDon", idHoaDon);
+        return "/manage/manage-bill-online";
     }
 
 

@@ -1,7 +1,5 @@
 package com.example.shoesmanagement.repository;
-import com.example.shoesmanagement.model.ChiTietGiay;
-import com.example.shoesmanagement.model.HoaDon;
-import com.example.shoesmanagement.model.HoaDonChiTiet;
+
 import com.example.shoesmanagement.model.*;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +14,9 @@ import java.util.UUID;
 @Controller
 public interface HoaDonChiTietRepository  extends JpaRepository<HoaDonChiTiet, UUID> {
 
+    void deleteByChiTietGiay(ChiTietGiay chiTietGiay);
+
+    List<HoaDonChiTiet> findByChiTietGiay(ChiTietGiay chiTietGiay);
 
     void deleteById(UUID id);
 
@@ -26,6 +27,9 @@ public interface HoaDonChiTietRepository  extends JpaRepository<HoaDonChiTiet, U
 
     @Query(value = "select hdct from HoaDonChiTiet hdct where hdct.hoaDon.idHD = ?1 and hdct.chiTietGiay.idCTG =?2")
     HoaDonChiTiet findByIdHoaDonAndIdChiTietGiay(UUID idHoaDon, UUID idChiTietGiay);
+
+    @Query(value = "select hdct from HoaDonChiTiet hdct where hdct.hoaDon.idHD = ?1 and hdct.chiTietGiay.idCTG =?2")
+    HoaDonChiTiet updateTongGiay(UUID idHoaDon, UUID idChiTietGiay);
 
 
     @Query(value = "select * from hoa_don_chi_tiet where id_hd = ?1 and trang_thai = 1", nativeQuery = true)
@@ -210,6 +214,5 @@ public interface HoaDonChiTietRepository  extends JpaRepository<HoaDonChiTiet, U
 
     @Query("select g from HoaDonChiTiet g where g.hoaDon.nhanVien.maNV =:maNV")
     List<HoaDonChiTiet> getChiTietSPNhanVienBan( String maNV);
-
 
 }
