@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class GHCTServiceImpl implements GHCTService {
@@ -35,6 +34,9 @@ public class GHCTServiceImpl implements GHCTService {
     public GioHangChiTiet findByCTSPActive(ChiTietGiay chiTietGiay) {
         return ghctRepository.findByChiTietGiayAndTrangThai(chiTietGiay, 1);
     }
+
+
+
 
     @Override
     public GioHangChiTiet findByCTSP(ChiTietGiay chiTietGiay) {

@@ -57,6 +57,10 @@ public class CheckOutController {
     @Autowired
     private KhuyenMaiService khuyenMaiService;
 
+@Autowired
+private GioHangService gioHangService;
+
+
     @Autowired
     private KhuyenMaiRepository khuyenMaiRepository;
 
@@ -267,7 +271,7 @@ public class CheckOutController {
                 .sum();
 
         double total = hoaDonChiTietList.stream()
-                .mapToDouble(HoaDonChiTiet::getDonGia)
+                .mapToDouble(HoaDonChiTiet::getDonGia )
                 .sum();
 
         // Cập nhật phí vận chuyển sau khi thêm địa chỉ mới
@@ -287,7 +291,7 @@ public class CheckOutController {
         Double shippingFee2 = shippingFeeService.calculatorShippingFee(hoaDon, 25000.0);
 
         model.addAttribute("sumQuantity", sumQuantity);
-        model.addAttribute("total", total);
+        model.addAttribute("total", total * sumQuantity);
         model.addAttribute("diaChiKHDefault", diaChiKH);
         model.addAttribute("listProductCheckOut", hoaDonChiTietList);
         model.addAttribute("listAddressKH", diaChiKHList);
@@ -298,7 +302,7 @@ public class CheckOutController {
         model.addAttribute("billPlaceOrder", hoaDon);
         model.addAttribute("shippingFee", shippingFee2);
 
-        model.addAttribute("toTalOder", total + shippingFee2 - giaTienGiam);
+        model.addAttribute("toTalOder", (total * sumQuantity) + shippingFee2 - giaTienGiam);
 
 
         session.removeAttribute("diaChiGiaoHang");
@@ -350,7 +354,8 @@ public class CheckOutController {
         model.addAttribute("ngayDuKien", ngayDuKien);
 
         model.addAttribute("sumQuantity", sumQuantity);
-        model.addAttribute("total", total);
+        model.addAttribute("total", total * sumQuantity);
+
         model.addAttribute("diaChiKHDefault", diaChiKHChange);
         model.addAttribute("fullNameLogin", khachHang.getHoTenKH());
 
@@ -361,6 +366,7 @@ public class CheckOutController {
         model.addAttribute("billPlaceOrder", hoaDon);
         model.addAttribute("toTalOder", total + shippingFee);
 
+        model.addAttribute("toTalOder", (total * sumQuantity) + shippingFee - giaTienGiam);
         session.removeAttribute("diaChiGiaoHang");
         session.setAttribute("diaChiGiaoHang", diaChiKHChange);
 
@@ -375,6 +381,11 @@ public class CheckOutController {
         HoaDon hoaDon = (HoaDon) session.getAttribute("hoaDonTaoMoi");
         KhachHang khachHang = (KhachHang) session.getAttribute("KhachHangLogin");
 
+        GioHang gioHang1 = gioHangService.findByKhachHang(khachHang);
+        if (session.getAttribute("KhachHangLogin") == null) {
+            // Nếu managerLogged bằng null, quay về trang login
+            return "redirect:/buyer/login";
+        }
         String hinhThucThanhToan = request.getParameter("hinhThucThanhToan");
         String loiNhan = request.getParameter("loiNhan");
 
@@ -402,7 +413,9 @@ public class CheckOutController {
             /// lay gio hang
         //
         for (HoaDonChiTiet xx : hoaDonChiTietList) {
-            GioHangChiTiet gioHangChiTiet = ghctService.findByCTSPActive(xx.getChiTietGiay());
+
+            GioHangChiTiet gioHangChiTiet = ghctService.findByCTGActiveAndKhachHangAndTrangThai(xx.getChiTietGiay(),gioHang1 );
+
             if (gioHangChiTiet != null) {
                 gioHangChiTiet.setTrangThai(0);
                 ghctService.addNewGHCT(gioHangChiTiet);
